@@ -155,7 +155,9 @@ def generate_mahazar(raw_notes, api_key):
             max_output_tokens=1000,
             temperature=0.2,
         )
-        model = genai.GenerativeModel('gemini-1.5-flash-latest', system_instruction=SYSTEM_PROMPT, generation_config=generation_config)
+        
+        # Using gemini-2.0-flash which is explicitly permitted by the user's API Key
+        model = genai.GenerativeModel('gemini-2.0-flash', system_instruction=SYSTEM_PROMPT, generation_config=generation_config)
         
         with st.spinner("⚖️ Activating Defense-Proofing Engine... Formatting Legal Tamil..."):
             response = model.generate_content(raw_notes, request_options={"timeout": 15.0})
