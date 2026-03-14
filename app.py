@@ -150,7 +150,7 @@ def generate_mahazar_stream(raw_notes, api_key):
             max_output_tokens=8192,
             temperature=0.2,
         )
-        model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=SYSTEM_PROMPT, generation_config=generation_config)
+        model = genai.GenerativeModel('gemini-flash-latest', system_instruction=SYSTEM_PROMPT, generation_config=generation_config)
         
         # Stream the response to keep mobile WebSocket alive
         response = model.generate_content(raw_notes, stream=True)
