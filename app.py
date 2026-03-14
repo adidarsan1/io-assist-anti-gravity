@@ -140,14 +140,36 @@ if "generated_mahazar" not in st.session_state:
 # --- GEMINI PROCESSING FUNCTION ---
 def generate_mahazar(raw_notes, api_key):
     try:
+        import os
+        os.environ["GRPC_PYTHON_BUILD_SYSTEM_OPENSSL"] = "1"
+        os.environ["GRPC_PYTHON_BUILD_SYSTEM_ZLIB"] = "1"
+        
+        if not api_key:
+            return "🚨 Error: Please provide your Gemini API Key in the Settings panel."
+        
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-pro', system_instruction=SYSTEM_PROMPT)
+        
+        # Adding generation config to force synchronous cutoff and prevent hanging
+        generation_config = genai.types.GenerationConfig(
+            candidate_count=1,
+            max_output_tokens=1000,
+            temperature=0.2,
+        )
+        model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=SYSTEM_PROMPT, generation_config=generation_config)
         
         with st.spinner("⚖️ Activating Defense-Proofing Engine... Formatting Legal Tamil..."):
-            response = model.generate_content(raw_notes)
-            return response.text
+            response = model.generate_content(raw_notes, request_options={"timeout": 15.0})
+            
+            if response.text:
+                return response.text
+            else:
+                return "🚨 Error: Gemini succeeded but returned an empty response. Try typing more notes."
+                
     except Exception as e:
-        return f"🚨 Error: {str(e)}"
+        error_msg = str(e)
+        if "API key" in error_msg or "400" in error_msg or "403" in error_msg:
+            return f"🚨 API Key Error: Your API key is either invalid or missing. Please check the Settings panel.\nDetails: {error_msg}"
+        return f"🚨 Engine Timeout or Error: {error_msg}. Please try refreshing the page and checking your internet connection."
 
 # --- MAIN UI ---
 st.markdown('<div class="glowing-title">IO-Assist</div>', unsafe_allow_html=True)
