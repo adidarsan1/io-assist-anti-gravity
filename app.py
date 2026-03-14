@@ -1,10 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 import time
-import os
-from streamlit_mic_recorder import mic_recorder
-
-# --- PAGE CONFIGURATION ---
+import os# --- PAGE CONFIGURATION ---
 st.set_page_config(
     page_title="IO-Assist | Anti-Gravity",
     page_icon="⚖️",
@@ -197,25 +194,13 @@ if not st.session_state.api_key:
 st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 st.markdown('<div class="step-header">🎤 Step 1: Data Ingestion</div>', unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs(["🎙️ Voice Input", "⌨️ Text Input"])
+st.info("💡 Note: Use your mobile keyboard's built-in microphone 🎙️ for the highest accuracy Tamil voice-typing.")
 
-with tab1:
-    st.markdown("<p style='color: #94A3B8; font-size: 0.9rem;'>Tap to record field notes in Tanglish/Tamil/English.</p>", unsafe_allow_html=True)
-    audio_data = mic_recorder(
-        start_prompt="🔴 Initiate Recording",
-        stop_prompt="⏹️ Finalize Recording",
-        key='mic_input',
-        use_container_width=True
-    )
-    if audio_data:
-        st.info("💡 Note: For ultimate accuracy in Tamil voice-typing, the 'Text Input' tab with your mobile keyboard mic is recommended.")
-
-with tab2:
-    raw_text_input = st.text_area(
-        "",
-        height=180,
-        placeholder="Draft your raw notes here...\n\nExample: Scene paathom, east adutha veedu, west road, blood stains irundhuchu near the door. Rendu witness vandhanga, Ramu um Somu um..."
-    )
+raw_text_input = st.text_area(
+    "",
+    height=180,
+    placeholder="Draft your raw notes here...\n\nExample: Scene paathom, east adutha veedu, west road, blood stains irundhuchu near the door. Rendu witness vandhanga, Ramu um Somu um..."
+)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Processing Section
