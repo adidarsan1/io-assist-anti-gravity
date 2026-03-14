@@ -135,60 +135,37 @@ if "generated_mahazar" not in st.session_state:
     st.session_state.generated_mahazar = ""
 
 # --- GEMINI PROCESSING FUNCTION ---
-def generate_mahazar(raw_notes, api_key):
-    import requests
+def generate_mahazar_stream(raw_notes, api_key):
+    import google.generativeai as genai
     
     if not api_key:
-        return "🚨 Error: Please provide your Gemini API Key in the Settings panel."
-    
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_key}"
-    
-    headers = {
-        "Content-Type": "application/json"
-    }
-    
-    data = {
-        "system_instruction": {
-            "parts": [
-                {"text": SYSTEM_PROMPT}
-            ]
-        },
-        "contents": [
-            {
-                "parts": [
-                    {"text": raw_notes}
-                ]
-            }
-        ],
-        "generationConfig": {
-            "temperature": 0.2,
-            "maxOutputTokens": 8192,
-            "candidateCount": 1
-        }
-    }
-    
-    with st.spinner("⚖️ Activating Defense-Proofing Engine... Formatting Legal Tamil..."):
-        try:
-            # Pure synchronous HTTP request - impossible to deadlock Streamlit's async loop
-            response = requests.post(url, headers=headers, json=data, timeout=60)
-            
-            if response.status_code == 200:
-                result = response.json()
-                if "candidates" in result and len(result["candidates"]) > 0:
-                    return result["candidates"][0]["content"]["parts"][0]["text"]
-                else:
-                    return "🚨 Error: Gemini succeeded but returned an empty response. Try typing more notes."
-            elif response.status_code == 400:
-                return f"🚨 API Key Error: Your API key is invalid. Please check the Settings panel."
-            elif response.status_code == 429:
-                return f"🚨 Quota Error: Your API key has exceeded its free tier rate limit. Please wait 1 minute."
-            else:
-                return f"🚨 API Error ({response.status_code}): {response.text}"
+        yield "🚨 Error: Please provide your Gemini API Key in the Settings panel."
+        return
+        
+    try:
+        genai.configure(api_key=api_key)
+        
+        generation_config = genai.types.GenerationConfig(
+            candidate_count=1,
+            max_output_tokens=8192,
+            temperature=0.2,
+        )
+        model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=SYSTEM_PROMPT, generation_config=generation_config)
+        
+        # Stream the response to keep mobile WebSocket alive
+        response = model.generate_content(raw_notes, stream=True)
+        for chunk in response:
+            if chunk.text:
+                yield chunk.text
                 
-        except requests.exceptions.Timeout:
-            return "🚨 Timeout Error: The server took too long to respond. Please check your internet and try again."
-        except Exception as e:
-            return f"🚨 Connection Error: {str(e)}"
+    except Exception as e:
+        error_msg = str(e)
+        if "API key" in error_msg or "400" in error_msg or "403" in error_msg:
+            yield f"\n\n🚨 API Key Error: Your API key is invalid or missing.\nDetails: {error_msg}"
+        elif "429" in error_msg:
+            yield f"\n\n🚨 Quota Error: Exceeded free tier rate limit. Wait 1 minute."
+        else:
+            yield f"\n\n🚨 Generation Error: {error_msg}"
 
 # --- MAIN UI ---
 st.markdown('<div class="glowing-title">IO-Assist</div>', unsafe_allow_html=True)
@@ -231,12 +208,23 @@ if st.button("🚀 ENGAGE ANTI-GRAVITY PROTOCOL", use_container_width=True, type
     if 'raw_text_input' not in locals() or not raw_text_input.strip():
         st.error("Please provide field data to process.")
     else:
-        st.session_state.generated_mahazar = generate_mahazar(raw_text_input, st.session_state.api_key)
+        st.session_state.generated_mahazar = ""
+        st.session_state.is_generating = True
+        st.session_state.raw_input_store = raw_text_input
+        st.rerun()
 st.markdown('</div>', unsafe_allow_html=True)
 
-
 # Output Section
-if st.session_state.generated_mahazar:
+if getattr(st.session_state, 'is_generating', False):
+    st.markdown('<div class="glass-card" style="border-color: #00E5FF; box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);">', unsafe_allow_html=True)
+    st.markdown('<div class="step-header" style="color: #00E5FF;">📄 Step 3: Stream Active...</div>', unsafe_allow_html=True)
+    with st.spinner("⚖️ Activating Defense-Proofing Engine... Streaming Format..."):
+        stream = generate_mahazar_stream(st.session_state.raw_input_store, st.session_state.api_key)
+        full_response = st.write_stream(stream)
+        st.session_state.generated_mahazar = full_response
+        st.session_state.is_generating = False
+        st.rerun()
+elif st.session_state.generated_mahazar:
     st.markdown('<div class="glass-card" style="border-color: #00E5FF; box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);">', unsafe_allow_html=True)
     st.markdown('<div class="step-header" style="color: #00E5FF;">📄 Step 3: CCTNS Ready Payload</div>', unsafe_allow_html=True)
     
