@@ -136,39 +136,59 @@ if "generated_mahazar" not in st.session_state:
 
 # --- GEMINI PROCESSING FUNCTION ---
 def generate_mahazar(raw_notes, api_key):
-    try:
-        import os
-        os.environ["GRPC_PYTHON_BUILD_SYSTEM_OPENSSL"] = "1"
-        os.environ["GRPC_PYTHON_BUILD_SYSTEM_ZLIB"] = "1"
-        
-        if not api_key:
-            return "🚨 Error: Please provide your Gemini API Key in the Settings panel."
-        
-        genai.configure(api_key=api_key)
-        
-        # Adding generation config to force synchronous cutoff and prevent hanging
-        generation_config = genai.types.GenerationConfig(
-            candidate_count=1,
-            max_output_tokens=8192,
-            temperature=0.2,
-        )
-        
-        # Falling back to gemini-flash-latest as found in the user's supported model list
-        model = genai.GenerativeModel('gemini-flash-latest', system_instruction=SYSTEM_PROMPT, generation_config=generation_config)
-        
-        with st.spinner("⚖️ Activating Defense-Proofing Engine... Formatting Legal Tamil..."):
-            response = model.generate_content(raw_notes, request_options={"timeout": 60.0})
+    import requests
+    
+    if not api_key:
+        return "🚨 Error: Please provide your Gemini API Key in the Settings panel."
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_key}"
+    
+    headers = {
+        "Content-Type": "application/json"
+    }
+    
+    data = {
+        "system_instruction": {
+            "parts": [
+                {"text": SYSTEM_PROMPT}
+            ]
+        },
+        "contents": [
+            {
+                "parts": [
+                    {"text": raw_notes}
+                ]
+            }
+        ],
+        "generationConfig": {
+            "temperature": 0.2,
+            "maxOutputTokens": 8192,
+            "candidateCount": 1
+        }
+    }
+    
+    with st.spinner("⚖️ Activating Defense-Proofing Engine... Formatting Legal Tamil..."):
+        try:
+            # Pure synchronous HTTP request - impossible to deadlock Streamlit's async loop
+            response = requests.post(url, headers=headers, json=data, timeout=60)
             
-            if response.text:
-                return response.text
+            if response.status_code == 200:
+                result = response.json()
+                if "candidates" in result and len(result["candidates"]) > 0:
+                    return result["candidates"][0]["content"]["parts"][0]["text"]
+                else:
+                    return "🚨 Error: Gemini succeeded but returned an empty response. Try typing more notes."
+            elif response.status_code == 400:
+                return f"🚨 API Key Error: Your API key is invalid. Please check the Settings panel."
+            elif response.status_code == 429:
+                return f"🚨 Quota Error: Your API key has exceeded its free tier rate limit. Please wait 1 minute."
             else:
-                return "🚨 Error: Gemini succeeded but returned an empty response. Try typing more notes."
+                return f"🚨 API Error ({response.status_code}): {response.text}"
                 
-    except Exception as e:
-        error_msg = str(e)
-        if "API key" in error_msg or "400" in error_msg or "403" in error_msg:
-            return f"🚨 API Key Error: Your API key is either invalid or missing. Please check the Settings panel.\nDetails: {error_msg}"
-        return f"🚨 Engine Timeout or Error: {error_msg}. Please try refreshing the page and checking your internet connection."
+        except requests.exceptions.Timeout:
+            return "🚨 Timeout Error: The server took too long to respond. Please check your internet and try again."
+        except Exception as e:
+            return f"🚨 Connection Error: {str(e)}"
 
 # --- MAIN UI ---
 st.markdown('<div class="glowing-title">IO-Assist</div>', unsafe_allow_html=True)
