@@ -1,7 +1,7 @@
 import streamlit as st
-import google.generativeai as genai
 import time
-import os# --- PAGE CONFIGURATION ---
+import os
+
 st.set_page_config(
     page_title="IO-Assist | Anti-Gravity",
     page_icon="⚖️",
@@ -128,9 +128,13 @@ SYSTEM_PROMPT = """
 **Output Requirement:** ONLY provide the translated and formatted Legal Tamil text. Do not add any conversational filler or introductory text.
 """
 
-# --- INITALIZE SESSION STATE ---
+# --- INITIALIZE SESSION STATE ---
+# Auto-load API key from Streamlit Secrets if available (no manual entry needed)
 if "api_key" not in st.session_state:
-    st.session_state.api_key = ""
+    try:
+        st.session_state.api_key = st.secrets["GEMINI_API_KEY"]
+    except Exception:
+        st.session_state.api_key = ""
 if "generated_mahazar" not in st.session_state:
     st.session_state.generated_mahazar = ""
 
