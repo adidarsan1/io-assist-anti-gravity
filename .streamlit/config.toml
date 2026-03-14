@@ -1,0 +1,8 @@
+[theme]
+# Anti-Gravity Dark Mode Theme
+base="dark"
+primaryColor="#00E5FF" # Vibrant Cyan
+backgroundColor="#0A0A0A" # Deep Black
+secondaryBackgroundColor="#1A1A1A" # Dark Gray
+textColor="#FFFFFF" # White
+font="sans serif"
