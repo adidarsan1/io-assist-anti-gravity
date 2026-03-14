@@ -152,7 +152,7 @@ def generate_mahazar(raw_notes, api_key):
         # Adding generation config to force synchronous cutoff and prevent hanging
         generation_config = genai.types.GenerationConfig(
             candidate_count=1,
-            max_output_tokens=1000,
+            max_output_tokens=8192,
             temperature=0.2,
         )
         
@@ -160,7 +160,7 @@ def generate_mahazar(raw_notes, api_key):
         model = genai.GenerativeModel('gemini-flash-latest', system_instruction=SYSTEM_PROMPT, generation_config=generation_config)
         
         with st.spinner("⚖️ Activating Defense-Proofing Engine... Formatting Legal Tamil..."):
-            response = model.generate_content(raw_notes, request_options={"timeout": 15.0})
+            response = model.generate_content(raw_notes, request_options={"timeout": 60.0})
             
             if response.text:
                 return response.text
