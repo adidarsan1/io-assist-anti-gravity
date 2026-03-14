@@ -6,11 +6,108 @@ from streamlit_mic_recorder import mic_recorder
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
-    page_title="IO-Assist Anti-Gravity",
+    page_title="IO-Assist | Anti-Gravity",
     page_icon="⚖️",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
+
+# --- ADVANCED UI CSS (Anti-Gravity Theme) ---
+st.markdown("""
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+    
+    /* Main Background & Text */
+    .stApp {
+        background-color: #0A0A0B;
+        color: #E2E8F0;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Glowing Title */
+    .glowing-title {
+        font-size: 3.2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #00E5FF 0%, #0052FF 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0px 4px 20px rgba(0, 229, 255, 0.4);
+        margin-bottom: 5px;
+        text-align: center;
+        padding-top: 20px;
+    }
+    
+    .subtitle {
+        text-align: center;
+        color: #94A3B8;
+        font-size: 1.1rem;
+        font-weight: 400;
+        margin-bottom: 40px;
+        letter-spacing: 0.5px;
+    }
+
+    /* Glassmorphic Containers */
+    .glass-card {
+        background: rgba(30, 41, 59, 0.4);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .step-header {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #00E5FF;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Inputs */
+    .stTextInput > div > div > input, .stTextArea > div > div > textarea {
+        background-color: rgba(15, 23, 42, 0.6) !important;
+        border: 1px solid rgba(148, 163, 184, 0.2) !important;
+        color: #F8FAFC !important;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    .stTextInput > div > div > input:focus, .stTextArea > div > div > textarea:focus {
+        border-color: #00E5FF !important;
+        box-shadow: 0 0 0 1px #00E5FF !important;
+    }
+    
+    /* Buttons */
+    .stButton > button {
+        background: linear-gradient(135deg, #00E5FF 0%, #0052FF 100%);
+        color: white !important;
+        border: none !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.5px !important;
+        padding: 0.6rem 2rem !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 15px rgba(0, 229, 255, 0.2) !important;
+        width: 100% !important;
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 25px rgba(0, 229, 255, 0.4) !important;
+    }
+    
+    /* Checkbox & Expander */
+    .streamlit-expanderHeader {
+        background-color: transparent !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 12px !important;
+        color: #E2E8F0 !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # --- SYSTEM PROMPT (The "Defense-Proofing Engine") ---
 SYSTEM_PROMPT = """
@@ -44,86 +141,78 @@ if "generated_mahazar" not in st.session_state:
 def generate_mahazar(raw_notes, api_key):
     try:
         genai.configure(api_key=api_key)
-        # Using gemini-1.5-pro for best reasoning and multilingual support
         model = genai.GenerativeModel('gemini-1.5-pro', system_instruction=SYSTEM_PROMPT)
         
-        with st.spinner("Processing legal Tamil phrasing..."):
+        with st.spinner("⚖️ Activating Defense-Proofing Engine... Formatting Legal Tamil..."):
             response = model.generate_content(raw_notes)
             return response.text
     except Exception as e:
         return f"🚨 Error: {str(e)}"
 
 # --- MAIN UI ---
-st.title("⚖️ IO-Assist: Anti-Gravity")
-st.markdown("*Voice-to-CCTNS Legal Mahazar Generator*")
+st.markdown('<div class="glowing-title">IO-Assist</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Anti-Gravity Legal Mahazar Generator</div>', unsafe_allow_html=True)
 
-st.markdown("---")
-
-# API Key Input
-with st.expander("⚙️ Settings (Provide Gemini API Key)", expanded=not st.session_state.api_key):
+# API Key Input (Glass Card)
+st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+with st.expander("⚙️ System Configuration (API Key)", expanded=not st.session_state.api_key):
     st.session_state.api_key = st.text_input(
         "Google Gemini API Key", 
         type="password", 
         value=st.session_state.api_key,
-        help="Get your free API key at aistudio.google.com"
+        help="Paste your API key to activate the engine."
     )
     if not st.session_state.api_key:
-        st.warning("Please enter your Gemini API Key to use the tool.")
-        st.stop()
+        st.warning("⚠️ API Key required to establish AI uplink.")
+st.markdown('</div>', unsafe_allow_html=True)
 
+if not st.session_state.api_key:
+    st.stop()
 
-# Input Section
-st.subheader("🎤 Step 1: Record or Type Field Notes")
+# Input Section (Glass Card)
+st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+st.markdown('<div class="step-header">🎤 Step 1: Data Ingestion</div>', unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs(["Voice Dictation", "Text Input"])
+tab1, tab2 = st.tabs(["🎙️ Voice Input", "⌨️ Text Input"])
 
 with tab1:
-    st.info("Tap the mic below, speak your observation notes (in Tamil or English), then tap again to stop.")
+    st.markdown("<p style='color: #94A3B8; font-size: 0.9rem;'>Tap to record field notes in Tanglish/Tamil/English.</p>", unsafe_allow_html=True)
     audio_data = mic_recorder(
-        start_prompt="🔴 Start Recording",
-        stop_prompt="⏹️ Stop Recording",
+        start_prompt="🔴 Initiate Recording",
+        stop_prompt="⏹️ Finalize Recording",
         key='mic_input',
         use_container_width=True
     )
-    
-    # Placeholder for actual transcription. For a purely Streamlit cloud app without external
-    # complex STT dependencies, we'd ideally use standard browser Speech Recognition 
-    # but `streamlit-mic-recorder` just captures audio bytes.
-    # To keep this simple and "no-code" deployable, we'll instruct the user to use 
-    # the built-in keyboard dictation on their mobile devices in the Text Tab for highest accuracy.
     if audio_data:
-        st.warning("⚠️ For highest accuracy Tamil voice-to-text, please use your phone's built-in keyboard mic (Google Voice Typing) in the 'Text Input' tab instead.")
+        st.info("💡 Note: For ultimate accuracy in Tamil voice-typing, the 'Text Input' tab with your mobile keyboard mic is recommended.")
 
 with tab2:
-    st.info("Type or use your phone's keyboard microphone to dictate your raw notes here.")
     raw_text_input = st.text_area(
-        "Raw Observation Notes (Tanglish/Tamil/English):",
-        height=150,
-        placeholder="e.g., Scene paathom, east adutha veedu, west road, blood stains irundhuchu near the door. Rendu witness vandhanga, Ramu um Somu um. Time morning 10 AM so natural light irundhuchu..."
+        "",
+        height=180,
+        placeholder="Draft your raw notes here...\n\nExample: Scene paathom, east adutha veedu, west road, blood stains irundhuchu near the door. Rendu witness vandhanga, Ramu um Somu um..."
     )
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Processing Section
-st.markdown("---")
-st.subheader("⚙️ Step 2: Generate Legal Mahazar")
+st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+st.markdown('<div class="step-header">⚙️ Step 2: Protocol Execution</div>', unsafe_allow_html=True)
 
-if st.button("🚀 Process & Format (Anti-Gravity)", use_container_width=True, type="primary"):
-    if not raw_text_input.strip():
-        st.error("Please provide some field notes first.")
+if st.button("🚀 ENGAGE ANTI-GRAVITY PROTOCOL", use_container_width=True, type="primary"):
+    if 'raw_text_input' not in locals() or not raw_text_input.strip():
+        st.error("Please provide field data to process.")
     else:
         st.session_state.generated_mahazar = generate_mahazar(raw_text_input, st.session_state.api_key)
+st.markdown('</div>', unsafe_allow_html=True)
 
 
 # Output Section
 if st.session_state.generated_mahazar:
-    st.markdown("---")
-    st.subheader("📄 Step 3: Copy for CCTNS")
+    st.markdown('<div class="glass-card" style="border-color: #00E5FF; box-shadow: 0 0 20px rgba(0, 229, 255, 0.1);">', unsafe_allow_html=True)
+    st.markdown('<div class="step-header" style="color: #00E5FF;">📄 Step 3: CCTNS Ready Payload</div>', unsafe_allow_html=True)
     
-    output_container = st.container(border=True)
-    with output_container:
-        st.markdown(st.session_state.generated_mahazar)
-        
+    st.markdown("<p style='color: #94A3B8; font-size: 0.9rem; margin-bottom: 10px;'>Use the copy icon on the top right of the code block below.</p>", unsafe_allow_html=True)
     st.code(st.session_state.generated_mahazar, language="markdown")
-    st.success("Draft ready! Use the copy icon in the top right of the code block above to copy the text.")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("---")
-st.caption("🔒 *Anti-Gravity Defense-Shield Active: Ensures Source of Light, Boundaries, and Witnesses are validated.*")
+st.markdown("<div style='text-align: center; color: #475569; font-size: 0.8rem; margin-top: 20px;'>🔒 Defense-Shield Active: Validates Light Source, Boundaries & Witnesses</div>", unsafe_allow_html=True)
